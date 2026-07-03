@@ -174,9 +174,10 @@
 <div id="printer">
   <div class="slot"></div>
   <div id="receiptWrap"><img id="receiptImg" alt="网吧小票"></div>
-  <div class="savehint">📱 长按小票图片即可保存 / 发给老网友</div>
+  <div class="savehint">📱 长按小票图片 → 保存到相册 / 直接发给老网友</div>
   <div class="actions">
-    <button class="dl" onclick="downloadPNG()">下载图片 (PNG)</button>
+    <button class="dl" id="shareBtn" onclick="sharePNG()" style="display:none">📤 保存 / 分享小票</button>
+    <button class="dl" id="dlBtn" onclick="downloadPNG()">下载图片 (PNG)</button>
     <button onclick="restart()">再来一次</button>
     <a href="https://muformoon.github.io/internet-cafe-tycoon-presskit/play/" target="_blank" rel="noopener">去看看这款游戏 →</a>
   </div>
@@ -405,6 +406,30 @@ function restart(){
   document.getElementById('cafeName').value='';
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
+
+async function sharePNG(){
+  try{
+    const cv=document.getElementById('rc');
+    const blob=await new Promise(res=>cv.toBlob(res,'image/png'));
+    const file=new File([blob],'wangba-zhangdan.png',{type:'image/png'});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'网吧青春账单'});
+    }else{
+      downloadPNG();
+    }
+  }catch(e){ /* user cancelled share sheet — ignore */ }
+}
+// Mobile: prefer share button (goes to gallery/apps); desktop: plain download
+(function(){
+  const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const canShareFiles=!!(navigator.canShare&&navigator.share);
+  if(isMobile){
+    document.getElementById('dlBtn').style.display='none';
+    if(canShareFiles) document.getElementById('shareBtn').style.display='inline-block';
+    // if no share support, long-press hint (already visible) is the path
+  }
+})();
 
 build();
 showStep(0);
